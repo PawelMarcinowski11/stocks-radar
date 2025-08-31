@@ -1,5 +1,5 @@
-import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
-import { createReducer, on, Action } from '@ngrx/store';
+import { EntityAdapter, EntityState, createEntityAdapter } from '@ngrx/entity';
+import { Action, createReducer, on } from '@ngrx/store';
 
 import * as StocksActions from './stocks.actions';
 import { StocksEntity } from './stocks.models';
@@ -7,9 +7,10 @@ import { StocksEntity } from './stocks.models';
 export const STOCKS_FEATURE_KEY = 'stocks';
 
 export interface StocksState extends EntityState<StocksEntity> {
-  selectedId?: string | number; // which Stocks record has been selected
-  loaded: boolean; // has the Stocks list been loaded
-  error?: string | null; // last known error (if any)
+  selectedSymbol?: string | null;
+  loaded: boolean;
+  connected: boolean;
+  error?: string | null;
 }
 
 export interface StocksPartialState {
@@ -20,23 +21,31 @@ export const stocksAdapter: EntityAdapter<StocksEntity> =
   createEntityAdapter<StocksEntity>();
 
 export const initialStocksState: StocksState = stocksAdapter.getInitialState({
-  // set initial required properties
   loaded: false,
+  connected: false,
 });
 
 const reducer = createReducer(
   initialStocksState,
-  on(StocksActions.initStocks, (state) => ({
+  on(StocksActions.connectStocks, (state) => ({
     ...state,
     loaded: false,
     error: null,
   })),
-  on(StocksActions.loadStocksSuccess, (state, { stocks }) =>
+  on(StocksActions.stocksReceived, (state, { stocks }) =>
     stocksAdapter.setAll(stocks, { ...state, loaded: true })
   ),
-  on(StocksActions.loadStocksFailure, (state, { error }) => ({
+  on(StocksActions.stocksConnectionError, (state, { error }) => ({
     ...state,
-    error,
+    error: error == null ? null : String(error),
+  })),
+  on(StocksActions.stocksConnected, (state) => ({
+    ...state,
+    connected: true,
+  })),
+  on(StocksActions.stocksDisconnected, (state) => ({
+    ...state,
+    connected: false,
   }))
 );
 

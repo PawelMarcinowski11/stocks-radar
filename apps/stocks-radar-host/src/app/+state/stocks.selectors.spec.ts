@@ -1,18 +1,24 @@
 import { StocksEntity } from './stocks.models';
 import {
+  initialStocksState,
   stocksAdapter,
   StocksPartialState,
-  initialStocksState,
 } from './stocks.reducer';
 import * as StocksSelectors from './stocks.selectors';
 
 describe('Stocks Selectors', () => {
   const ERROR_MSG = 'No Error Available';
-  const getStocksId = (it: StocksEntity) => it.id;
-  const createStocksEntity = (id: string, name = '') =>
+  const getStocksSymbol = (it: StocksEntity) => it.symbol;
+  const createStocksEntity = (symbol: string, price = 100) =>
     ({
-      id,
-      name: name || `name-${id}`,
+      symbol,
+      price,
+      change: 0,
+      dayMax: price + 5,
+      dayMin: price - 5,
+      dayOpen: price - 2,
+      lastUpdate: new Date().toISOString(),
+      percentChange: 0,
     } as StocksEntity);
 
   let state: StocksPartialState;
@@ -30,6 +36,7 @@ describe('Stocks Selectors', () => {
           selectedId: 'PRODUCT-BBB',
           error: ERROR_MSG,
           loaded: true,
+          connected: true,
         }
       ),
     };
@@ -38,17 +45,17 @@ describe('Stocks Selectors', () => {
   describe('Stocks Selectors', () => {
     it('selectAllStocks() should return the list of Stocks', () => {
       const results = StocksSelectors.selectAllStocks(state);
-      const selId = getStocksId(results[1]);
+      const symbol = results[1].symbol;
 
       expect(results.length).toBe(3);
-      expect(selId).toBe('PRODUCT-BBB');
+      expect(symbol).toBe('PRODUCT-BBB');
     });
 
     it('selectEntity() should return the selected Entity', () => {
       const result = StocksSelectors.selectEntity(state) as StocksEntity;
-      const selId = getStocksId(result);
+      const symbol = result.symbol;
 
-      expect(selId).toBe('PRODUCT-BBB');
+      expect(symbol).toBe('PRODUCT-BBB');
     });
 
     it('selectStocksLoaded() should return the current "loaded" status', () => {
@@ -61,6 +68,12 @@ describe('Stocks Selectors', () => {
       const result = StocksSelectors.selectStocksError(state);
 
       expect(result).toBe(ERROR_MSG);
+    });
+
+    it('selectStocksConnected() should return the current "connected" state', () => {
+      const result = StocksSelectors.selectStocksConnected(state);
+
+      expect(result).toBe(true);
     });
   });
 });

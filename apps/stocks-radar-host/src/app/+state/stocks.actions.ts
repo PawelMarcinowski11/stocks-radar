@@ -1,14 +1,17 @@
 import { createAction, props } from '@ngrx/store';
 import { StocksEntity } from './stocks.models';
 
-export const initStocks = createAction('[Stocks Page] Init');
+export const connectStocks = createAction('[Stocks WS] Connect');
 
-export const loadStocksSuccess = createAction(
-  '[Stocks/API] Load Stocks Success',
+export const stocksReceived = createAction(
+  '[Stocks WS] Stocks Received',
   props<{ stocks: StocksEntity[] }>()
 );
 
-export const loadStocksFailure = createAction(
-  '[Stocks/API] Load Stocks Failure',
-  props<{ error: any }>()
+export const stocksConnectionError = createAction(
+  '[Stocks WS] Connection Error',
+  props<{ error: unknown }>()
 );
+
+export const stocksConnected = createAction('[Stocks WS] Connected');
+export const stocksDisconnected = createAction('[Stocks WS] Disconnected');

@@ -1,7 +1,10 @@
-/**
- * Interface for the 'Stocks' data
- */
 export interface StocksEntity {
-  id: string | number; // Primary ID
-  name: string;
+  change: number;
+  dayMax: number;
+  dayMin: number;
+  dayOpen: number;
+  lastUpdate: string;
+  percentChange: number;
+  price: number;
+  symbol: string;
 }

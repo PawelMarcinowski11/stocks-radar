@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
-import { StoreModule, Store } from '@ngrx/store';
+import { Store, StoreModule } from '@ngrx/store';
 import { firstValueFrom } from 'rxjs';
 
 import * as StocksActions from './stocks.actions';
@@ -11,10 +11,8 @@ import { StocksEntity } from './stocks.models';
 import {
   STOCKS_FEATURE_KEY,
   StocksState,
-  initialStocksState,
   stocksReducer,
 } from './stocks.reducer';
-import * as StocksSelectors from './stocks.selectors';
 
 interface TestSchema {
   stocks: StocksState;
@@ -23,9 +21,15 @@ interface TestSchema {
 describe('StocksFacade', () => {
   let facade: StocksFacade;
   let store: Store<TestSchema>;
-  const createStocksEntity = (id: string, name = ''): StocksEntity => ({
-    id,
-    name: name || `name-${id}`,
+  const createStocksEntity = (symbol: string, price = 100): StocksEntity => ({
+    symbol,
+    price,
+    change: 0,
+    dayMax: price + 5,
+    dayMin: price - 5,
+    dayOpen: price - 2,
+    lastUpdate: new Date().toISOString(),
+    percentChange: 0,
   });
 
   describe('used in NgModule', () => {
@@ -53,17 +57,16 @@ describe('StocksFacade', () => {
       facade = TestBed.inject(StocksFacade);
     });
 
-    /**
-     * The initially generated facade::loadAll() returns empty array
-     */
     it('loadAll() should return empty list with loaded == true', async () => {
       let list = await firstValueFrom(facade.allStocks$);
       let isLoaded = await firstValueFrom(facade.loaded$);
+      const isConnected = await firstValueFrom(facade.connected$);
 
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
+      expect(isConnected).toBe(false);
 
-      facade.init();
+      facade.connect();
 
       list = await firstValueFrom(facade.allStocks$);
       isLoaded = await firstValueFrom(facade.loaded$);
@@ -72,9 +75,6 @@ describe('StocksFacade', () => {
       expect(isLoaded).toBe(true);
     });
 
-    /**
-     * Use `loadStocksSuccess` to manually update list
-     */
     it('allStocks$ should return the loaded list; and loaded flag == true', async () => {
       let list = await firstValueFrom(facade.allStocks$);
       let isLoaded = await firstValueFrom(facade.loaded$);
@@ -83,7 +83,7 @@ describe('StocksFacade', () => {
       expect(isLoaded).toBe(false);
 
       store.dispatch(
-        StocksActions.loadStocksSuccess({
+        StocksActions.stocksReceived({
           stocks: [createStocksEntity('AAA'), createStocksEntity('BBB')],
         })
       );
@@ -93,6 +93,32 @@ describe('StocksFacade', () => {
 
       expect(list.length).toBe(2);
       expect(isLoaded).toBe(true);
+    });
+
+    it('connected$ should reflect connection state', async () => {
+      let isConnected = await firstValueFrom(facade.connected$);
+      expect(isConnected).toBe(false);
+
+      store.dispatch(StocksActions.stocksConnected());
+
+      isConnected = await firstValueFrom(facade.connected$);
+      expect(isConnected).toBe(true);
+
+      store.dispatch(StocksActions.stocksDisconnected());
+
+      isConnected = await firstValueFrom(facade.connected$);
+      expect(isConnected).toBe(false);
+    });
+
+    it('error$ should reflect error state', async () => {
+      const error = new Error('Test error');
+      let errorState = await firstValueFrom(facade.error$);
+      expect(errorState).toBeNull();
+
+      store.dispatch(StocksActions.stocksConnectionError({ error }));
+
+      errorState = await firstValueFrom(facade.error$);
+      expect(errorState).toBe(String(error));
     });
   });
 });

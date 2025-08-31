@@ -1,7 +1,7 @@
 services:
   # TODO frontend
   backend:
-    image: kubamichalek/statscore-websocket-recruitmentSignalR
+    image: kubamichalek/statscore-websocket-recruitment
     ports:
       - "${BACKEND_PORT:-32770}:8080"
     restart: always
