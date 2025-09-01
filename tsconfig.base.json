@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "table/Routes": ["libs/table/src/app/remote-entry/entry.routes.ts"]
+      "@stocks-radar/table": ["libs/table/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
