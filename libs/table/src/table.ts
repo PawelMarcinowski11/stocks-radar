@@ -55,7 +55,9 @@ export class Table implements OnChanges, OnDestroy {
   private searchTerms = new Subject<string>();
 
   protected readonly store = inject(StocksTableStore);
+  protected readonly favoriteSymbols = this.store.favoriteSymbols;
   protected readonly loading = this.store.loading;
+  protected readonly recentlyChanged = this.store.recentlyChanged;
   protected readonly searchQuery = this.store.searchQuery;
   protected readonly sortColumn = this.store.sortColumn;
   protected readonly sortDirection = this.store.sortDirection;

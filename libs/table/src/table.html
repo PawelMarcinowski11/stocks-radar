@@ -41,7 +41,7 @@
       <span>{{ getErrorMessage() }}</span>
     </div>
     } @else if (!stocks().length) {
-    <div class="text-semibold max-w-96 p-4 rounded-lg" data-testid="empty-state">
+    <div class="text-semibold max-w-96 p-4 rounded-lg">
       @if (searchQuery() && data.length > 0) {
         <div>No stocks match your search for "{{ searchQuery() | uppercase }}"</div>
         <button 
@@ -81,7 +81,7 @@
               </span>
               Price
             </th>
-            <th class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right  cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('change')">
+            <th class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('change')">
               <span class="pr-2" [ngClass]="{'visible': sortColumn() === 'change', 'invisible': sortColumn() !== 'change'}">
                 @if (sortDirection() === 'asc') {
                   <ng-icon name="hero-arrow-up" />
@@ -108,37 +108,54 @@
         </thead>
         <tbody>
           @for (stock of stocks(); track stock.symbol) {
-          <tr class="hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500"
-              [attr.data-testid]="'stock-row-' + stock.symbol" 
-              [ngClass]="{'bg-sky-100/30 dark:bg-orange-100/10': store.isFavorite(stock.symbol)}">
-            <td class="h-10 px-4 py-2 text-center">
-              <button 
-                (click)="toggleFavorite(stock.symbol, $event)"
-                class="p-1 rounded-full hover:bg-sky-300/50 dark:hover:bg-orange-400/30 transition-colors focus:outline-none"
-                [attr.data-testid]="'favorite-' + stock.symbol"
-                [attr.aria-label]="store.isFavorite(stock.symbol) ? 'Remove from favorites' : 'Add to favorites'">
-                @if (store.isFavorite(stock.symbol)) {
-                  <ng-icon name="hero-star-solid" class="text-amber-500 dark:text-amber-400" size="20px" />
-                } @else {
-                  <ng-icon name="hero-star" class="text-gray-400 dark:text-gray-500" size="20px" />
-                }
-              </button>
-            </td>
-            <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left">{{ stock.symbol }}</td>
-            <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right" [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0, 'text-red-800 dark:text-red-300': stock.change < 0}">{{ stock.price | number:'1.2-2' }}</td>
-            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right" [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0, 'text-red-800 dark:text-red-300': stock.change < 0}">
-              {{ stock.change > 0 ? '+' : ''}}{{ stock.change | number:'1.2-2' }}
-            </td>
-            <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right" [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0, 'text-red-800 dark:text-red-300': stock.change < 0}">
-              {{ stock.change > 0 ? '+' : ''}}{{ stock.percentChange | number:'1.2-2' }}%
-            </td>
-            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right">
-              {{ stock.dayMin | number:'1.2-2' }} - {{ stock.dayMax | number:'1.2-2' }}
-            </td>
-            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right">{{ stock.dayOpen | number:'1.2-2' }}</td>
-            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left">{{ stock.lastUpdate | date:'medium' }}</td>
-          </tr>
-          }
+            @let hasRecentlyChanged = store.hasRecentlyChanged(stock.symbol);
+            @let priceChangeDirection = store.getPriceChangeDirection(stock.symbol);
+            <tr class="hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500" 
+                [ngClass]="{'bg-sky-100/30 dark:bg-orange-100/10': store.isFavorite(stock.symbol)}">
+              <td class="h-10 px-4 py-2 text-center">
+                <button 
+                  (click)="toggleFavorite(stock.symbol, $event)"
+                  class="p-1 transition-colors focus:outline-none"
+                  [attr.aria-label]="store.isFavorite(stock.symbol) ? 'Remove from favorites' : 'Add to favorites'">
+                  @if (store.isFavorite(stock.symbol)) {
+                    <ng-icon name="hero-star-solid" class="text-amber-500 dark:text-amber-400" size="20px" />
+                  } @else {
+                    <ng-icon name="hero-star" class="text-gray-400 dark:text-gray-500" size="20px" />
+                  }
+                </button>
+              </td>
+              <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left">{{ stock.symbol }}</td>
+              <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right transition-colors duration-1000"
+                [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0,
+                            'text-red-800 dark:text-red-300': stock.change < 0,
+                            'animate-flash-green animate-duration-[1500ms] animate-once': hasRecentlyChanged && priceChangeDirection === 'up',
+                            'animate-flash-red animate-duration-[1500ms] animate-once': hasRecentlyChanged && priceChangeDirection === 'down'
+                }">
+                {{ stock.price | number:'1.2-2' }}
+              </td>
+              <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right transition-colors duration-1000"
+                [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0,
+                            'text-red-800 dark:text-red-300': stock.change < 0,
+                            'animate-flash-green animate-duration-[1500ms] animate-once': hasRecentlyChanged && priceChangeDirection === 'up',
+                            'animate-flash-red animate-duration-[1500ms] animate-once': hasRecentlyChanged && priceChangeDirection === 'down'
+                }">
+                {{ stock.change > 0 ? '+' : ''}}{{ stock.change | number:'1.2-2' }}
+              </td>
+              <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right transition-colors duration-1000"
+                [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0,
+                            'text-red-800 dark:text-red-300': stock.change < 0,
+                            'animate-flash-green animate-duration-[1500ms] animate-once': hasRecentlyChanged && priceChangeDirection === 'up',
+                            'animate-flash-red animate-duration-[1500ms] animate-once': hasRecentlyChanged && priceChangeDirection === 'down'
+                }">
+                {{ stock.change > 0 ? '+' : ''}}{{ stock.percentChange | number:'1.2-2' }}%
+              </td>
+              <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right">
+                {{ stock.dayMin | number:'1.2-2' }} - {{ stock.dayMax | number:'1.2-2' }}
+              </td>
+              <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right">{{ stock.dayOpen | number:'1.2-2' }}</td>
+              <td [ngClass]="{'animate-flash-blue animate-duration-500 animate-thrice': hasRecentlyChanged}" class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left">{{ stock.lastUpdate | date:'medium' }}</td>
+            </tr>
+            }
         </tbody>
       </table>
     </div>

@@ -1,5 +1,7 @@
 import { Injectable, computed, signal } from "@angular/core";
 
+import { Subject, shareReplay } from "rxjs";
+
 import { StockData } from "./models";
 
 @Injectable()
@@ -7,14 +9,17 @@ export class StocksTableStore {
   private readonly _error = signal<string | null>(null);
   private readonly _favoriteSymbols = signal<string[]>([]);
   private readonly _loading = signal<boolean>(true);
+  private readonly _recentlyChanged = signal<Map<string, 'up' | 'down'>>(new Map());
   private readonly _searchQuery = signal<string>('');
   private readonly _sortColumn = signal<SortColumn>('symbol');
   private readonly _sortDirection = signal<SortDirection>('asc');
   private readonly _stocks = signal<StockData[]>([]);
+  private readonly stockUpdates$ = new Subject<{symbol: string, change: 'up' | 'down'}>();
 
   public readonly error = this._error.asReadonly();
   public readonly favoriteSymbols = this._favoriteSymbols.asReadonly();
   public readonly loading = this._loading.asReadonly();
+  public readonly recentlyChanged = this._recentlyChanged.asReadonly();
   public readonly searchQuery = this._searchQuery.asReadonly();
   public readonly sortColumn = this._sortColumn.asReadonly();
   public readonly sortDirection = this._sortDirection.asReadonly();
@@ -46,8 +51,32 @@ export class StocksTableStore {
   });
   public readonly stocks = this._stocks.asReadonly();
 
+  constructor() {
+    this.stockUpdates$.pipe(
+      shareReplay(undefined, 2000)
+    ).subscribe(update => {
+      this._recentlyChanged.update(map => {
+        const newMap = new Map(map);
+        newMap.set(update.symbol, update.change);
+
+        return newMap;
+      });
+    });
+  }
+
   public addStock(stock: StockData): void {
     this._stocks.update((stocks) => [...stocks, stock]);
+  }
+
+  public getPriceChangeDirection(symbol: string): 'up' | 'down' | undefined {
+    const map = this._recentlyChanged();
+    if (!map.has(symbol)) return undefined;
+
+    return map.get(symbol);
+  }
+
+  public hasRecentlyChanged(symbol: string): boolean {
+    return this._recentlyChanged().has(symbol);
   }
 
   public isFavorite(symbol: string): boolean {
@@ -81,6 +110,26 @@ export class StocksTableStore {
   }
 
   public setStocks(stocks: StockData[]): void {
+    const currentStocks = this._stocks();
+    
+    if (currentStocks.length > 0) {
+      stocks.forEach(newStock => {
+        const existingStock = currentStocks.find(s => s.symbol === newStock.symbol);
+
+        if (existingStock) {
+          const priceChanged = existingStock.price !== newStock.price;
+
+          if (priceChanged) {
+            this.stockUpdates$.next({
+              symbol: newStock.symbol,
+              change: newStock.price > existingStock.price ? 'up' : 'down'
+            });
+          }
+        }
+        
+      });
+    }
+    
     this._stocks.set(stocks);
     this._loading.set(false);
   }
@@ -89,10 +138,8 @@ export class StocksTableStore {
     this._favoriteSymbols.update(favorites => {
       const index = favorites.indexOf(symbol);
       if (index === -1) {
-        // Add to favorites
         return [...favorites, symbol];
       } else {
-        // Remove from favorites
         return favorites.filter(s => s !== symbol);
       }
     });
@@ -108,14 +155,6 @@ export class StocksTableStore {
       this._sortColumn.set(column);
       this._sortDirection.set('asc');
     }
-  }
-
-  public updateStock(updatedStock: StockData): void {
-    this._stocks.update((stocks) =>
-      stocks.map((stock) =>
-        stock.symbol === updatedStock.symbol ? updatedStock : stock
-      )
-    );
   }
 }
 

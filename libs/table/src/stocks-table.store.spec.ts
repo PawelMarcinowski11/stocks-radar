@@ -235,37 +235,4 @@ describe('StocksTableStore', () => {
       expect(store.error()).toBeNull();
     });
   });
-
-  describe('updateStock', () => {
-    beforeEach(() => {
-      store.setStocks(mockStocks);
-    });
-
-    it('should update an existing stock', () => {
-      const updatedStock = {
-        ...mockStocks[0],
-        price: 190.5,
-        change: 5.25
-      };
-
-      store.updateStock(updatedStock);
-      
-      const stock = store.stocks().find(s => s.symbol === 'AAPL');
-      expect(stock?.price).toBe(190.5);
-      expect(stock?.change).toBe(5.25);
-    });
-
-    it('should not change other stocks when updating one stock', () => {
-      const originalMsft = store.stocks().find(s => s.symbol === 'MSFT');
-      const updatedStock = {
-        ...mockStocks[0],
-        price: 190.5
-      };
-
-      store.updateStock(updatedStock);
-      
-      const msftAfterUpdate = store.stocks().find(s => s.symbol === 'MSFT');
-      expect(msftAfterUpdate).toEqual(originalMsft);
-    });
-  });
 });

@@ -7,4 +7,6 @@ export interface StockData {
   percentChange: number;
   price: number;
   symbol: string;
+  flashPositive?: boolean; // Indicator for positive value change animation
+  flashNegative?: boolean; // Indicator for negative value change animation
 }
