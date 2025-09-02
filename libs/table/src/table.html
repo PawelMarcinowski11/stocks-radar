@@ -3,7 +3,31 @@
                 shadow-xl shadow-[rgba(0,0,0,0.3)] rounded-lg border border-white dark:border-stone-600 border-opacity-50
                 text-stone-800 dark:text-stone-200
                 p-4 w-fit transition-colors duration-1000">
-    <h2 class="text-2xl font-semibold pb-4 inline-block">Stocks Data</h2>
+    <div class="flex justify-between items-center w-full mb-4">
+      <h2 class="text-2xl font-semibold">Stocks Data</h2>
+      <div class="relative flex items-center w-64 rounded-md">
+        <div class="absolute left-8 text-gray-500 dark:text-gray-400">
+          <ng-icon name="hero-magnifying-glass" size="16px" />
+        </div>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+          placeholder="Search by symbol..."
+          autocomplete="off"
+          class="ml-4 uppercase placeholder:normal-case pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 
+                 rounded-md bg-white dark:bg-stone-700 
+                 text-gray-900 dark:text-gray-100
+                 focus:ring-2 focus:ring-sky-400 dark:focus:ring-orange-400 
+                 focus:border-transparent outline-none transition-colors duration-1000"
+        />
+        @if (searchTerm) {
+        <div class="absolute right-4 text-gray-500 dark:text-gray-400">
+          <ng-icon name="hero-x-mark" size="16px" (click)="clearSearch()" aria-label="Clear search"/>
+        </div>
+        }
+      </div>
+    </div>
     @if (loading()) {
     <div class="max-w-96 p-4 gap-4 flex flex-col">
       <div class="self-center">
@@ -17,14 +41,27 @@
     </div>
     } @else if (!stocks().length) {
     <div class="text-semibold max-w-96 p-4 rounded-lg">
-      <span>No stocks data available</span>
+      @if (searchQuery() && data.length > 0) {
+        <div>No stocks match your search for "{{ searchQuery() | uppercase }}"</div>
+        <button 
+          (click)="clearSearch()" 
+          class="text-sky-600 dark:text-orange-400 hover:underline font-semibold"
+          aria-label="Clear search">
+          Clear search
+        </button>
+      } @else {
+        <span>No stocks data available</span>
+      }
     </div>
     } @else {
     <div>
-      <table class="w-full table-auto ">
+      <table class="w-full table-auto">
         <thead>
           <tr class="select-none">
-            <th class="h-10 px-6 py-2 text-left cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('symbol')">
+            <th class="h-10 px-4 py-2 text-center hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500">
+              Favorite
+            </th>
+            <th class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('symbol')">
               Symbol <span class="pl-2" [ngClass]="{'visible': sortColumn() === 'symbol', 'invisible': sortColumn() !== 'symbol'}">
                 @if (sortDirection() === 'asc') {
                   <ng-icon name="hero-arrow-up" />
@@ -33,7 +70,7 @@
                 }
               </span>
             </th>
-            <th class="h-10 px-6 py-2 text-right cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('price')">
+            <th class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('price')">
               <span class="pr-2" [ngClass]="{'visible': sortColumn() === 'price', 'invisible': sortColumn() !== 'price'}">
                 @if (sortDirection() === 'asc') {
                   <ng-icon name="hero-arrow-up" />
@@ -43,7 +80,7 @@
               </span>
               Price
             </th>
-            <th class="h-10 px-6 py-2 text-right cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('change')">
+            <th class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right  cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('change')">
               <span class="pr-2" [ngClass]="{'visible': sortColumn() === 'change', 'invisible': sortColumn() !== 'change'}">
                 @if (sortDirection() === 'asc') {
                   <ng-icon name="hero-arrow-up" />
@@ -53,7 +90,7 @@
               </span>
               Change
             </th>
-            <th class="h-10 px-6 py-2 text-right cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('percentChange')">
+            <th class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right cursor-pointer hover:bg-sky-400/50 dark:hover:bg-orange-400/50 transition-colors hover:duration-100 duration-500" (click)="sortBy('percentChange')">
               <span class="pr-2" [ngClass]="{'visible': sortColumn() === 'percentChange', 'invisible': sortColumn() !== 'percentChange'}">
                 @if (sortDirection() === 'asc') {
                   <ng-icon name="hero-arrow-up" />
@@ -63,28 +100,40 @@
               </span>
               % Change
             </th>
-            <th class="h-10 px-6 py-2 text-right hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">Day Range</th>
-            <th class="h-10 px-6 py-2 text-right hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">Open</th>
-            <th class="h-10 px-6 py-2 text-left hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">Last Update</th>
+            <th class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">Day Range</th>
+            <th class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">Open</th>
+            <th class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">Last Update</th>
           </tr>
         </thead>
         <tbody>
           @for (stock of stocks(); track stock.symbol) {
-          <tr class="hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500">
-            <td class="h-10 px-6 py-2 text-left">{{ stock.symbol }}</td>
-            <td class="h-10 px-6 py-2 text-right">{{ stock.price | number:'1.2-2' }}</td>
-            <td class="h-10 px-6 py-2 text-right" [ngClass]="getChangeColorClass(stock.change)">
-              {{ stock.change | number:'1.2-2' }}
+          <tr class="hover:bg-white/50 dark:hover:bg-stone-400/50 transition-colors hover:duration-100 duration-500" 
+              [ngClass]="{'bg-sky-100/30 dark:bg-orange-100/10': store.isFavorite(stock.symbol)}">
+            <td class="h-10 px-4 py-2 text-center">
+              <button 
+                (click)="toggleFavorite(stock.symbol, $event)"
+                class="p-1 rounded-full hover:bg-sky-300/50 dark:hover:bg-orange-400/30 transition-colors focus:outline-none"
+                [attr.aria-label]="store.isFavorite(stock.symbol) ? 'Remove from favorites' : 'Add to favorites'">
+                @if (store.isFavorite(stock.symbol)) {
+                  <ng-icon name="hero-star-solid" class="text-amber-500 dark:text-amber-400" size="20px" />
+                } @else {
+                  <ng-icon name="hero-star" class="text-gray-400 dark:text-gray-500" size="20px" />
+                }
+              </button>
             </td>
-            <td class="h-10 px-6 py-2 text-right" [ngClass]="getChangeColorClass(stock.percentChange)">
-              {{ stock.percentChange | number:'1.2-2' }}%
+            <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left">{{ stock.symbol }}</td>
+            <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right" [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0, 'text-red-800 dark:text-red-300': stock.change < 0}">{{ stock.price | number:'1.2-2' }}</td>
+            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right" [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0, 'text-red-800 dark:text-red-300': stock.change < 0}">
+              {{ stock.change > 0 ? '+' : ''}}{{ stock.change | number:'1.2-2' }}
             </td>
-            <td class="h-10 px-6 py-2 text-right">
-              {{ stock.dayMin | number:'1.2-2' }} - {{ stock.dayMax |
-              number:'1.2-2' }}
+            <td class="h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right" [ngClass]="{'text-green-800 dark:text-green-300': stock.change > 0, 'text-red-800 dark:text-red-300': stock.change < 0}">
+              {{ stock.change > 0 ? '+' : ''}}{{ stock.percentChange | number:'1.2-2' }}%
             </td>
-            <td class="h-10 px-6 py-2 text-right">{{ stock.dayOpen | number:'1.2-2' }}</td>
-            <td class="h-10 px-6 py-2 text-left">{{ stock.lastUpdate | date:'medium' }}</td>
+            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right">
+              {{ stock.dayMin | number:'1.2-2' }} - {{ stock.dayMax | number:'1.2-2' }}
+            </td>
+            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-right">{{ stock.dayOpen | number:'1.2-2' }}</td>
+            <td class="max-md:hidden h-10 max-md:px-2 max-md:py-1 px-6 py-2 text-left">{{ stock.lastUpdate | date:'medium' }}</td>
           </tr>
           }
         </tbody>

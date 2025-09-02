@@ -5,19 +5,35 @@ import { StockData } from "./models";
 @Injectable()
 export class StocksTableStore {
   private readonly _error = signal<string | null>(null);
+  private readonly _favoriteSymbols = signal<string[]>([]);
   private readonly _loading = signal<boolean>(true);
+  private readonly _searchQuery = signal<string>('');
   private readonly _sortColumn = signal<SortColumn>('symbol');
   private readonly _sortDirection = signal<SortDirection>('asc');
   private readonly _stocks = signal<StockData[]>([]);
 
   public readonly error = this._error.asReadonly();
+  public readonly favoriteSymbols = this._favoriteSymbols.asReadonly();
   public readonly loading = this._loading.asReadonly();
+  public readonly searchQuery = this._searchQuery.asReadonly();
   public readonly sortColumn = this._sortColumn.asReadonly();
   public readonly sortDirection = this._sortDirection.asReadonly();
   public readonly sortedStocks = computed(() => {
-    const sorted = [...this._stocks()];
+    const allStocks = [...this._stocks()];
+    const favoriteSymbols = this._favoriteSymbols();
+    
+    const query = this._searchQuery().toLowerCase();
+    const filtered = query 
+      ? allStocks.filter(stock => stock.symbol.toLowerCase().includes(query))
+      : allStocks;
 
-    return sorted.sort((a, b) => {
+    return filtered.sort((a, b) => {
+      const aIsFavorite = favoriteSymbols.includes(a.symbol);
+      const bIsFavorite = favoriteSymbols.includes(b.symbol);
+      
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      
       const aValue = a[this._sortColumn()];
       const bValue = b[this._sortColumn()];
 
@@ -32,6 +48,10 @@ export class StocksTableStore {
 
   public addStock(stock: StockData): void {
     this._stocks.update((stocks) => [...stocks, stock]);
+  }
+
+  public isFavorite(symbol: string): boolean {
+    return this._favoriteSymbols().includes(symbol);
   }
 
   public removeStock(symbol: string): void {
@@ -56,9 +76,26 @@ export class StocksTableStore {
     }
   }
 
+  public setSearchQuery(query: string): void {
+    this._searchQuery.set(query);
+  }
+
   public setStocks(stocks: StockData[]): void {
     this._stocks.set(stocks);
     this._loading.set(false);
+  }
+
+  public toggleFavorite(symbol: string): void {
+    this._favoriteSymbols.update(favorites => {
+      const index = favorites.indexOf(symbol);
+      if (index === -1) {
+        // Add to favorites
+        return [...favorites, symbol];
+      } else {
+        // Remove from favorites
+        return favorites.filter(s => s !== symbol);
+      }
+    });
   }
 
   public updateSort(column: SortColumn): void {

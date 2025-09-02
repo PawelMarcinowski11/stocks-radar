@@ -1,10 +1,12 @@
-import { DatePipe, DecimalPipe, NgClass } from "@angular/common";
+import { DatePipe, DecimalPipe, NgClass, UpperCasePipe } from "@angular/common";
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges, inject } from "@angular/core";
 import { toObservable } from "@angular/core/rxjs-interop";
+import { FormsModule } from "@angular/forms";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { heroArrowDown, heroArrowPathRoundedSquare, heroArrowUp, heroCurrencyDollar, heroCurrencyEuro, heroCurrencyPound, heroCurrencyYen } from "@ng-icons/heroicons/outline";
+import { heroArrowDown, heroArrowPathRoundedSquare, heroArrowUp, heroCurrencyDollar, heroCurrencyEuro, heroCurrencyPound, heroCurrencyYen, heroMagnifyingGlass, heroStar, heroXMark } from "@ng-icons/heroicons/outline";
+import { heroStarSolid } from "@ng-icons/heroicons/solid";
 
-import { EMPTY, Subject, interval, switchMap, takeUntil } from "rxjs";
+import { EMPTY, Subject, debounceTime, distinctUntilChanged, interval, switchMap, takeUntil } from "rxjs";
 
 import { StockData } from "./models";
 import { SortColumn, StocksTableStore } from "./stocks-table.store";
@@ -23,14 +25,15 @@ import { SortColumn, StocksTableStore } from "./stocks-table.store";
  * <lib-table
  *   [data]="stocksArray"
  *   [isLoading]="loading"
- *   [error]="errorMessage">
+ *   [error]="errorMessage"
+ *   [initialFavorites]="['AAPL', 'GOOGL']">
  * </lib-table>
  * ```
  */
 @Component({
   selector: 'lib-table',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, NgClass, NgIcon],
+  imports: [DatePipe, DecimalPipe, UpperCasePipe, NgClass, NgIcon, FormsModule],
   templateUrl: './table.html',
   providers: [StocksTableStore, provideIcons({
     heroArrowUp,
@@ -39,15 +42,21 @@ import { SortColumn, StocksTableStore } from "./stocks-table.store";
     heroCurrencyPound,
     heroCurrencyDollar,
     heroCurrencyYen,
-    heroArrowPathRoundedSquare
+    heroArrowPathRoundedSquare,
+    heroMagnifyingGlass,
+    heroXMark,
+    heroStar,
+    heroStarSolid
   })],
 })
 
 export class Table implements OnChanges, OnDestroy {
   private destroy$ = new Subject<void>();
+  private searchTerms = new Subject<string>();
 
   protected readonly store = inject(StocksTableStore);
   protected readonly loading = this.store.loading;
+  protected readonly searchQuery = this.store.searchQuery;
   protected readonly sortColumn = this.store.sortColumn;
   protected readonly sortDirection = this.store.sortDirection;
   protected readonly stocks = this.store.sortedStocks;
@@ -56,6 +65,7 @@ export class Table implements OnChanges, OnDestroy {
   @Input() public error: string | null = null;
   @Input() public isLoading = true;
   public loadingIcon = 'hero-arrow-path-rounded-square';
+  public searchTerm = '';
 
   constructor() {
     toObservable(this.loading).pipe(
@@ -69,11 +79,32 @@ export class Table implements OnChanges, OnDestroy {
     ).subscribe(() => {
       this.randomizeLoadingIcon();
     });
+    
+    this.searchTerms.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe((term: string) => {
+      this.store.setSearchQuery(term);
+    });
+  }
+
+  @Input() public set initialFavorites(favorites: string[]) {
+    if (favorites && favorites.length > 0) {
+      favorites.forEach(symbol => this.store.toggleFavorite(symbol));
+    }
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
+    const isInitialChange = Object.values(changes).some(change => change.firstChange);
+    
     if (changes['data']) {
       this.store.setStocks(this.data);
+      
+      if (this.searchTerm && !isInitialChange && 
+          changes['data'].previousValue?.length !== changes['data'].currentValue?.length) {
+        this.clearSearch();
+      }
     }
 
     if (changes['isLoading']) {
@@ -86,6 +117,7 @@ export class Table implements OnChanges, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    this.searchTerms.complete();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -97,8 +129,10 @@ export class Table implements OnChanges, OnDestroy {
     this.loadingIcon = loadingIcons[Math.floor(Math.random() * loadingIcons.length)];
   }
 
-  protected getChangeColorClass(change: number): string {
-    return change >= 0 ? 'positive-change' : 'negative-change';
+  protected clearSearch(): void {
+    this.searchTerm = '';
+    this.searchTerms.next(this.searchTerm);
+    this.store.setSearchQuery('');
   }
 
   protected getErrorMessage(): string {
@@ -116,7 +150,16 @@ export class Table implements OnChanges, OnDestroy {
     return this.store.error() !== null;
   }
 
+  protected onSearch(): void {
+    this.searchTerms.next(this.searchTerm);
+  }
+
   protected sortBy(column: SortColumn): void {
     this.store.updateSort(column);
+  }
+
+  protected toggleFavorite(symbol: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.store.toggleFavorite(symbol);
   }
 }
