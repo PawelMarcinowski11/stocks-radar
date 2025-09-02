@@ -1,13 +1,10 @@
-import { getGreeting } from '../support/app.po';
+// No imports needed for now
 
 describe('stocks-radar-host-e2e', () => {
   beforeEach(() => cy.visit('/'));
 
-  it('should display welcome message', () => {
-    // Custom command example, see `../support/commands.ts` file
-    cy.login('my-email@something.com', 'myPassword');
-
-    // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains(/Welcome/);
+  it('should display the stocks table', () => {
+    // Verify the stocks table is visible
+    cy.get('[data-testid="stocks-table"]').should('exist');
   });
 });
