@@ -4,17 +4,88 @@
   "sourceRoot": "libs/table/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": ["ui"],
+  "tags": [
+    "ui"
+  ],
   "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": [
+        "{workspaceRoot}/dist/{projectRoot}"
+      ],
+      "options": {
+        "project": "libs/table/ng-package.json",
+        "tsConfig": "libs/table/tsconfig.lib.json",
+        "assets": [{
+          "input": "libs/shared-assets",
+          "glob": "**/*",
+          "output": "assets/"
+        }]
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/table/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
     "test": {
       "executor": "@nx/vite:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
       "options": {
         "reportsDirectory": "../../coverage/libs/table"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "libs/table/.storybook",
+        "browserTarget": "table:build-storybook",
+        "compodoc": false,
+        "assets": [{
+          "input": "libs/shared-assets",
+          "glob": "**/*",
+          "output": "assets/"
+        }],
+        "styles": [
+            "./libs/table/styles.scss"
+        ]
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": [
+        "{options.outputDir}"
+      ],
+      "options": {
+        "outputDir": "dist/storybook/table",
+        "configDir": "libs/table/.storybook",
+        "browserTarget": "table:build-storybook",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "test-storybook -c libs/table/.storybook --url=http://localhost:4400"
+      }
     }
   }
 }

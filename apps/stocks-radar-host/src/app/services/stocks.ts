@@ -44,14 +44,14 @@ export class Stocks {
       });
 
       this.connection.on('updateStockPrice', (update: StocksEntity) => {
-        const current = this._updates$.getValue();
+        const current = [...this._updates$.getValue()];
         const idx = current.findIndex((s) => s.symbol === update.symbol);
         if (idx >= 0) {
           current[idx] = { ...current[idx], ...update };
         } else {
           current.push(update);
         }
-        this._updates$.next([...current]);
+        this._updates$.next(current);
       });
 
       await this.connection.start();

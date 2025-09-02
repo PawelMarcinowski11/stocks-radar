@@ -20,7 +20,12 @@
           {
             "glob": "**/*",
             "input": "apps/stocks-radar-host/public"
-          }
+          },
+          {
+            "input": "libs/shared-assets",
+            "glob": "**/*",
+            "output": "assets/"
+          }          
         ],
         "styles": ["apps/stocks-radar-host/src/styles.scss"],
         "customWebpackConfig": {

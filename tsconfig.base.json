@@ -10,13 +10,27 @@
     "importHelpers": true,
     "target": "es2022",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@stocks-radar/table": ["libs/table/src/index.ts"]
+      "@stocks-radar/host/state": [
+        "apps/stocks-radar-host/src/app/+state"
+      ],
+      "@stocks-radar/table": [
+        "libs/table/src/index.ts"
+      ],
+      "@stocks-radar/table2": [
+        "libs/table2/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }

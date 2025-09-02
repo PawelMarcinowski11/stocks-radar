@@ -1,1 +1,89 @@
-<p>Table works!</p>
+<div>
+  <div class="bg-white dark:bg-gray-800 backdrop-blur-xl bg-opacity-20 shadow-xl rounded-lg border border-white dark:border-gray-700 border-opacity-50 p-4 w-fit transition-colors duration-1000">
+    <h2 class="text-2xl font-semibold pb-4 inline-block">Stocks Data</h2>
+    @if (loading()) {
+    <div class="bg-white dark:bg-gray-800 max-w-96 p-4 gap-4 flex flex-col">
+      <div class="self-center">
+        <ng-icon name="{{ loadingIcon }}" size="40px" class="animate-spin" />
+      </div>
+      <span>Loading stocks data...</span>
+    </div>
+    } @else if (hasErrorMessage()) {
+    <div class="bg-red-50 dark:bg-red-950 max-w-96 p-4 rounded-lg">
+      <span>{{ getErrorMessage() }}</span>
+    </div>
+    } @else if (!stocks().length) {
+    <div class="bg-white dark:bg-gray-800 max-w-96 p-4 rounded-lg">
+      <span>No stocks data available</span>
+    </div>
+    } @else {
+    <div>
+      <table>
+        <thead class="bg-gray-100 dark:bg-gray-700">
+          <tr>
+            <th (click)="sortBy('symbol')">
+              Symbol @if (sortColumn() === 'symbol') {
+                @if (sortDirection() === 'asc') {
+                  <ng-icon name="arrow-up" />
+                } @else {
+                  <ng-icon name="arrow-down" />
+                }
+              }
+            </th>
+            <th (click)="sortBy('price')">
+              Price @if (sortColumn() === 'price') {
+                @if (sortDirection() === 'asc') {
+                  <ng-icon name="arrow-up" />
+                } @else {
+                  <ng-icon name="arrow-down" />
+                }
+              }
+            </th>
+            <th (click)="sortBy('change')">
+              Change @if (sortColumn() === 'change') {
+                @if (sortDirection() === 'asc') {
+                  <ng-icon name="arrow-up" />
+                } @else {
+                  <ng-icon name="arrow-down" />
+                }
+              }
+            </th>
+            <th (click)="sortBy('percentChange')">
+              % Change @if (sortColumn() === 'percentChange') {
+                @if (sortDirection() === 'asc') {
+                  <ng-icon name="arrow-up" />
+                } @else {
+                  <ng-icon name="arrow-down" />
+                }
+              }
+            </th>
+            <th>Day Range</th>
+            <th>Open</th>
+            <th>Last Update</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800">
+          @for (stock of stocks(); track stock.symbol) {
+          <tr>
+            <td>{{ stock.symbol }}</td>
+            <td class="text-right">{{ stock.price | number:'1.2-2' }}</td>
+            <td class="text-right" [ngClass]="getChangeColorClass(stock.change)">
+              {{ stock.change | number:'1.2-2' }}
+            </td>
+            <td class="text-right" [ngClass]="getChangeColorClass(stock.percentChange)">
+              {{ stock.percentChange | number:'1.2-2' }}%
+            </td>
+            <td class="text-right">
+              {{ stock.dayMin | number:'1.2-2' }} - {{ stock.dayMax |
+              number:'1.2-2' }}
+            </td>
+            <td class="text-right">{{ stock.dayOpen | number:'1.2-2' }}</td>
+            <td>{{ stock.lastUpdate | date:'medium' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+</div>

@@ -18,7 +18,9 @@ export interface StocksPartialState {
 }
 
 export const stocksAdapter: EntityAdapter<StocksEntity> =
-  createEntityAdapter<StocksEntity>();
+  createEntityAdapter<StocksEntity>({
+    selectId: (e) => e.symbol,
+  });
 
 export const initialStocksState: StocksState = stocksAdapter.getInitialState({
   loaded: false,
