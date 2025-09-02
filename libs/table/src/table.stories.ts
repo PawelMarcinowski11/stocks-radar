@@ -10,7 +10,7 @@ const withContainerStyles = (storyFn: any) => {
   
   story.template = `
     <div style="padding: 20px;">
-      <div style="margin-bottom: 15px; background: #7dd3fc33; padding: 16px; backdrop-filter: blur(24px); border: 1px solid #7dd3fc7f; box-shadow: 20px 20px 22px rgba(0,0,0,0.2); border-radius: 16px">
+      <div style="color: black; margin-bottom: 15px; background: #7dd3fc55; padding: 16px; backdrop-filter: blur(24px); border: 1px solid #7dd3fc7f; box-shadow: 0px 20px 25px -5px rgba(0,0,0,0.3); border-radius: 8px">
         <h2 style="font-size: 1.2rem; font-weight: 600;">Stock Table Demo</h2>
         <p style="font-size: 0.875rem;">
           Toggle dark mode using the Theme control in the Storybook toolbar
