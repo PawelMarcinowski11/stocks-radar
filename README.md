@@ -1,11 +1,11 @@
 # StocksRadar
 
-## Instrukcja uruchomienia
+## Instrukcja uruchamiania
 
 Cześć,
-projekt wygenerowałem za pomocą NXa, więc najlepiej uruchamiać go właśnie za jego pomocą. Można wykorzystać do tego NX Console, można również korzystać z CLI.
+projekt został wygenerowany za pomocą NXa i polecane jest uruchamiać go za jego pośrednictwem. Można wykorzystać do tego NX Console, można również korzystać z CLI.
 
-Obowiązkowo należy pobrać paczki z npma oraz uruchomić backend
+Obowiązkowo należy pobrać paczki z npma oraz uruchomić backend:
 ```
 npm i --legacy-peer-deps
 ```
@@ -13,20 +13,19 @@ npm i --legacy-peer-deps
 docker run -p 32770:8080 --rm kubamichalek/statscore-websocket-recruitment
 ```
 
-Następnie można zaserwować showcase, który zawiera w sobie tabelę, ale także kilka drobiazgów takich jak przycisk zmiany motywu między jasnym i ciemnym (domyślnie port 4200)
+Następnie można zaserwować showcase, który zawiera w sobie tabelę, ale także kilka drobiazgów takich jak przycisk zmiany motywu między jasnym i ciemnym (domyślnie port 4200):
 ```
 npx nx serve stocks-radar-host
-
 ```
-Tabela jest zrealizowana jako osobna paczka w bibliotece i ma skonfigurowanego swojego storybooka, którego warto uruchomić aby podejrzeć rzadko występujące stany, takie jak error lub loading (domyślnie port 4400)
+Tabela jest zrealizowana jako osobna paczka w bibliotece i ma skonfigurowanego swojego storybooka, którego warto uruchomić aby podejrzeć rzadko występujące stany, takie jak error lub loading (domyślnie port 4400):
 ```
 npx nx storybook table
 ```
-Komponent ma przygotowany szereg testów wywoływanych z poziomu NXa
+Komponent ma przygotowany szereg testów wywoływanych z poziomu NXa:
 ```
 npx nx test stocks-radar-host
 ```
-Użycie @testing-library było nieobowiązkowe, więc zamiast tego użyłem Cypressa i przygotowałem krótkie testy E2E
+Użycie @testing-library było nieobowiązkowe, więc zamiast tego użyłem Cypressa i przygotowałem krótkie testy E2E:
 ```
 npx nx run stocks-radar-host-e2e:e2e
 ```
@@ -37,6 +36,6 @@ npx nx run stocks-radar-host-e2e:e2e
 - Aby dodać coś ekstra od siebie, dodałem funkcjonalność wyszukiwania i funkcjonalność dodawania symboli do ulubionych, aby zawsze pojawiały się na górze listy.
 - Dodałem też tryb jasny i tryb ciemny oraz pełnię animacji między nimi. Wybierałem spośród kolorów tailwinda. https://tailscan.com/colors
 - Wygląd tabeli zainspirowany jest tymi materiałami: https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables https://codingartistweb.com/2021/01/glassmorphism-weather-card-ui-css/
-- Aby glassmorphism mógł rozwinąć pełnię potencjału, wykorzystałem darmowe zdjęcia z unsplasha jako tło i wykorzystałem pewien trick, aby się animowały przy swojej zamianie.
+- Aby uzyskać lepszy efekt dla glassmorphismu, wykorzystałem darmowe zdjęcia z unsplasha jako tło. Ponadto wykorzystałem pewien trick, aby się animowały przy swojej zamianie.
 
 Dziękuję za uwagę i pozdrawiam.
