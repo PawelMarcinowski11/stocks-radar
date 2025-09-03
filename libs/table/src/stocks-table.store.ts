@@ -53,7 +53,7 @@ export class StocksTableStore {
 
   constructor() {
     this.stockUpdates$.pipe(
-      shareReplay(undefined, 2000)
+      shareReplay(undefined, 5000)
     ).subscribe(update => {
       this._recentlyChanged.update(map => {
         const newMap = new Map(map);
